@@ -6,8 +6,35 @@ import gitHubAgent from '../../src/libs/GitHubAgent';
 jest.mock('@actions/core', () => ({
   getInput: () => '',
 }));
+
+type OctokitRestCallType = {
+  owner?: any;
+  repo?: any;
+  pull_number: number;
+};
 jest.mock('@actions/github', () => ({
-  getOctokit: () => ({}),
+  getOctokit: () => ({
+    rest: {
+      pulls: {
+        get: (payload: OctokitRestCallType) =>
+          new Promise<any>((resolve) => {
+            resolve({
+              data: {
+                number: payload.pull_number,
+                html_url: '',
+                body: '',
+              },
+            });
+          }),
+      },
+    },
+  }),
+  context: {
+    repo: {
+      owner: '',
+      repo: '',
+    },
+  },
 }));
 
 describe('GitHubAgent Test', () => {
@@ -15,11 +42,11 @@ describe('GitHubAgent Test', () => {
     expect(() => new GitHubAgent()).not.toThrow();
   });
 
-  it('retrieving pull request', () => {
+  it('retrieving pull request', async () => {
     const agent = new GitHubAgent();
 
     const givenPrNumber: number = 1;
-    const pr: PullRequest = agent.getPullRequest(givenPrNumber);
+    const pr: PullRequest = await agent.getPullRequest(givenPrNumber);
 
     expect(pr.number).toEqual(givenPrNumber);
   });
@@ -33,6 +60,8 @@ describe('GitHubAgent Test', () => {
       self: '',
     };
 
-    expect(() => agent.setPullRequestDescription(givenPr)).not.toThrow();
+    expect(
+      async () => await agent.setPullRequestDescription(givenPr)
+    ).not.toThrow();
   });
 });
