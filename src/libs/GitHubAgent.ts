@@ -3,9 +3,10 @@ import PullRequestLoadFailedError from '../errors/PullRequestLoadFailedError';
 import PullRequestUpdateFailedError from '../errors/PullRequestUpdateFailedError';
 import * as GitHub from '@actions/github';
 import Core from '@actions/core';
+import IGitHubAgent from '../interfaces/IGitHubAgent';
 
 type OctokitType = ReturnType<typeof GitHub.getOctokit>;
-class GitHubAgent {
+class GitHubAgent implements IGitHubAgent {
   github: OctokitType;
 
   constructor() {

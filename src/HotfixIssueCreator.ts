@@ -2,9 +2,17 @@ import NotImplementedError from './errors/NotImplementedError';
 import PullRequest from './types/PullRequest';
 import BranchInformation from './types/BranchInformation';
 import JiraIssue from './types/JiraIssue';
+import IGitHubAgent from './interfaces/IGitHubAgent';
+import IJiraAgent from './interfaces/IJiraAgent';
 
 class HotfixIssueCreator {
-  constructor() {}
+  githubAgent: IGitHubAgent;
+  jiraAgent: IJiraAgent;
+
+  constructor(githubAgent: IGitHubAgent, jiraAgent: IJiraAgent) {
+    this.githubAgent = githubAgent;
+    this.jiraAgent = jiraAgent;
+  }
 
   run() {
     throw new NotImplementedError();
