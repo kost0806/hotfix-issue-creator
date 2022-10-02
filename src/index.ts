@@ -1,4 +1,4 @@
-import HotfixIssueCreator from "./HotfixIssueCreator";
+import HotfixIssueCreator from './HotfixIssueCreator';
 
-const a = new HotfixIssueCreator();
-a.test();
+const hotfixIssueCreator = new HotfixIssueCreator();
+hotfixIssueCreator.run();
