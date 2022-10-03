@@ -4,7 +4,6 @@ import PullRequestUpdateFailedError from '../errors/PullRequestUpdateFailedError
 import * as GitHub from '@actions/github';
 import Core from '@actions/core';
 import IGitHubAgent from '../interfaces/IGitHubAgent';
-import BranchInformation from '../types/BranchInformation';
 
 type OctokitType = ReturnType<typeof GitHub.getOctokit>;
 class GitHubAgent implements IGitHubAgent {
@@ -17,13 +16,6 @@ class GitHubAgent implements IGitHubAgent {
 
   getInputValue(key: string): string {
     return Core.getInput(key, { required: true });
-  }
-
-  getBranchInformation(): BranchInformation {
-    return {
-      base: GitHub.context.base_ref,
-      head: GitHub.context.head_ref,
-    };
   }
 
   async getPullRequest(): Promise<PullRequest> {
