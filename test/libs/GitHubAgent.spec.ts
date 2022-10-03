@@ -63,6 +63,7 @@ describe('GitHubAgent Test', () => {
       number: 1,
       description: 'test description',
       self: '',
+      title: '',
     };
 
     expect(
