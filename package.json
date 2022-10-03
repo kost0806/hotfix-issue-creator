@@ -6,7 +6,7 @@
   "scripts": {
     "build": "npm run lint && ncc build src/index.ts -o dist",
     "start": "node dist/index.js",
-    "lint": "eslint --fix src/**/*",
+    "lint": "eslint --fix src/**/* test/**/*",
     "test": "jest"
   },
   "keywords": [],

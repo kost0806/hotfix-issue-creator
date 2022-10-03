@@ -4,17 +4,33 @@ import PullRequestUpdateFailedError from '../errors/PullRequestUpdateFailedError
 import * as GitHub from '@actions/github';
 import Core from '@actions/core';
 import IGitHubAgent from '../interfaces/IGitHubAgent';
+import BranchInformation from '../types/BranchInformation';
 
 type OctokitType = ReturnType<typeof GitHub.getOctokit>;
 class GitHubAgent implements IGitHubAgent {
   github: OctokitType;
 
   constructor() {
-    const token = Core.getInput('repo-token', { required: true });
+    const token = this.getInputValue('repo-token');
     this.github = GitHub.getOctokit(token);
   }
 
-  async getPullRequest(prNumber: number): Promise<PullRequest> {
+  getInputValue(key: string): string {
+    return Core.getInput(key, { required: true });
+  }
+
+  getBranchInformation(): BranchInformation {
+    return {
+      base: GitHub.context.base_ref,
+      head: GitHub.context.head_ref,
+    };
+  }
+
+  async getPullRequest(): Promise<PullRequest> {
+    const prNumber: number | undefined = this.getPullRequestNumber();
+    if (prNumber === undefined) {
+      throw new PullRequestLoadFailedError(-1);
+    }
     try {
       const { data: pullRequest } = await this.github.rest.pulls.get({
         owner: GitHub.context.repo.owner,
@@ -26,10 +42,20 @@ class GitHubAgent implements IGitHubAgent {
         number: pullRequest.number,
         self: pullRequest.html_url,
         description: pullRequest.body || '',
+        title: pullRequest.title,
       };
     } catch (e) {
       throw new PullRequestLoadFailedError(prNumber);
     }
+  }
+
+  private getPullRequestNumber(): number | undefined {
+    const pullRequest = GitHub.context.payload.pull_request;
+    if (!pullRequest) {
+      return undefined;
+    }
+
+    return pullRequest.number;
   }
 
   async setPullRequestDescription(pullRequest: PullRequest): Promise<any> {

@@ -1,6 +1,4 @@
-import NotImplementedError from './errors/NotImplementedError';
 import PullRequest from './types/PullRequest';
-import BranchInformation from './types/BranchInformation';
 import JiraIssue from './types/JiraIssue';
 import IGitHubAgent from './interfaces/IGitHubAgent';
 import IJiraAgent from './interfaces/IJiraAgent';
@@ -9,46 +7,76 @@ class HotfixIssueCreator {
   githubAgent: IGitHubAgent;
   jiraAgent: IJiraAgent;
 
+  issueKeywordRegexp: RegExp = /close\sissue\s*:\s*(.*)/gi;
+
   constructor(githubAgent: IGitHubAgent, jiraAgent: IJiraAgent) {
     this.githubAgent = githubAgent;
     this.jiraAgent = jiraAgent;
   }
 
-  run() {
-    throw new NotImplementedError();
+  async run() {
+    const pullRequest: PullRequest = await this.githubAgent.getPullRequest();
+    if (this.hasIssue(pullRequest)) {
+      return;
+    }
+
+    const issueSummary: string = this.extractIssueSummary(pullRequest);
+    const createdIssue: JiraIssue = await this.createIssue(
+      issueSummary,
+      pullRequest.description
+    );
+
+    await this.addJiraIssueInformationToPullRequest(
+      pullRequest,
+      createdIssue,
+      issueSummary
+    );
   }
 
   private hasIssue(pullRequest: PullRequest): boolean {
-    throw new NotImplementedError();
+    const jiraProjectKey = this.githubAgent.getInputValue('jira-project-key');
+    const issueKeyRegexp = new RegExp(`${jiraProjectKey}-\d+`);
+    throw issueKeyRegexp.test(pullRequest.description);
   }
 
-  private getBranchInformation(): BranchInformation {
-    throw new NotImplementedError();
-  }
-
-  private isTargetHeadBranch(branchInformation: BranchInformation): boolean {
-    throw new NotImplementedError();
-  }
-
-  private extractIssueSummary(pullRequest: PullRequest) {
-    throw new NotImplementedError();
+  private extractIssueSummary(pullRequest: PullRequest): string {
+    const summaryFromDescription =
+      this.getIssueSummaryKeywordInPrDescription(pullRequest);
+    if (summaryFromDescription === undefined) {
+      return pullRequest.title;
+    } else {
+      return summaryFromDescription;
+    }
   }
 
   private getIssueSummaryKeywordInPrDescription(
     pullRequest: PullRequest
-  ): string {
-    throw new NotImplementedError();
+  ): string | undefined {
+    const result = this.issueKeywordRegexp.exec(pullRequest.description);
+    if (result && result.length > 1) {
+      return result[1];
+    } else {
+      return undefined;
+    }
   }
 
-  private createIssue(summary: string, description: string): JiraIssue {
-    throw new NotImplementedError();
+  private async createIssue(
+    summary: string,
+    description: string
+  ): Promise<JiraIssue> {
+    return await this.jiraAgent.createIssue(summary, description);
   }
 
-  private addJiraIssueInformationToPullRequest(
+  private async addJiraIssueInformationToPullRequest(
     pullRequest: PullRequest,
-    jiraIssue: JiraIssue
+    jiraIssue: JiraIssue,
+    jiraIssueSummary: string
   ) {
-    throw new NotImplementedError();
+    pullRequest.description = pullRequest.description.replace(
+      this.issueKeywordRegexp,
+      `Close issue : [${jiraIssue.key} - ${jiraIssueSummary}](${jiraIssue.self})`
+    );
+    await this.githubAgent.setPullRequestDescription(pullRequest);
   }
 }
 

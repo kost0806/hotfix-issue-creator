@@ -34,6 +34,11 @@ jest.mock('@actions/github', () => ({
       owner: '',
       repo: '',
     },
+    payload: {
+      pull_request: {
+        number: 1,
+      },
+    },
   },
 }));
 
@@ -46,7 +51,7 @@ describe('GitHubAgent Test', () => {
     const agent = new GitHubAgent();
 
     const givenPrNumber: number = 1;
-    const pr: PullRequest = await agent.getPullRequest(givenPrNumber);
+    const pr: PullRequest = await agent.getPullRequest();
 
     expect(pr.number).toEqual(givenPrNumber);
   });
